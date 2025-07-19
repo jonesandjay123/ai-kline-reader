@@ -29,22 +29,39 @@
                 <!-- Upload Form -->
                 <div class="card mb-4">
                     <div class="card-header">
-                        <h5 class="card-title mb-0">上傳多張K線圖</h5>
+                        <h5 class="card-title mb-0">上傳K線圖檔案</h5>
                     </div>
                     <div class="card-body">
-                        <form method="POST" enctype="multipart/form-data">
-                            <div class="mb-3">
-                                <label for="files" class="form-label">選擇多張圖片檔案</label>
-                                <input type="file" class="form-control" id="files" name="files" 
-                                       accept="image/*" multiple required>
-                                <div class="form-text">
-                                    支援格式：PNG, JPG, JPEG, GIF, BMP, WebP (每檔最大 16MB)<br>
-                                    檔案名稱格式：DJT_1Day.png、NVDA_1Day.jpg 等
-                                </div>
+                        <!-- Single file input -->
+                        <div class="mb-3">
+                            <label for="singleFile" class="form-label">選擇圖片檔案</label>
+                            <div class="input-group">
+                                <input type="file" class="form-control" id="singleFile" 
+                                       accept="image/*">
+                                <button type="button" class="btn btn-outline-primary" id="addFileBtn">
+                                    <i class="bi bi-plus"></i> 新增檔案
+                                </button>
                             </div>
+                            <div class="form-text">
+                                支援格式：PNG, JPG, JPEG, GIF, BMP, WebP (每檔最大 16MB)<br>
+                                檔案名稱格式：DJT_1Day.png、NVDA_1Day.jpg 等
+                            </div>
+                        </div>
+
+                        <!-- Selected files list -->
+                        <div id="selectedFilesList" class="mb-3" style="display: none;">
+                            <label class="form-label">已選擇的檔案：</label>
+                            <div id="filesContainer" class="border rounded p-2">
+                                <!-- Files will be listed here -->
+                            </div>
+                        </div>
+
+                        <!-- Submit form -->
+                        <form method="POST" enctype="multipart/form-data" id="uploadForm">
+                            <!-- Hidden inputs for selected files will be added here -->
                             <div class="d-grid">
-                                <button type="submit" class="btn btn-primary btn-lg">
-                                    <i class="bi bi-upload"></i> 上傳並分析
+                                <button type="submit" class="btn btn-primary btn-lg" id="submitBtn" disabled>
+                                    <i class="bi bi-upload"></i> 分析所有檔案
                                 </button>
                             </div>
                         </form>
@@ -78,7 +95,8 @@
                         </div>
                         <div class="card-body">
                             <ul class="list-unstyled">
-                                <li><i class="bi bi-check-circle text-success"></i> 上傳多張K線圖截圖（檔名格式：DJT_1Day.png）</li>
+                                <li><i class="bi bi-check-circle text-success"></i> 逐一選擇K線圖截圖（檔名格式：DJT_1Day.png）</li>
+                                <li><i class="bi bi-check-circle text-success"></i> 使用「新增檔案」按鈕加入更多圖片</li>
                                 <li><i class="bi bi-check-circle text-success"></i> 支援多種圖片格式</li>
                                 <li><i class="bi bi-check-circle text-success"></i> AI將生成股票分析表格</li>
                                 <li><i class="bi bi-check-circle text-success"></i> 顯示股票代號、價位水平和當前股價</li>
