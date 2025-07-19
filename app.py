@@ -25,25 +25,47 @@ def allowed_file(filename):
     return '.' in filename and \
            filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
-def analyze_kline_image(image_path):
+def analyze_multiple_kline_images(image_files_info):
     try:
         model = genai.GenerativeModel('gemini-2.0-flash-exp')
         
-        image = Image.open(image_path)
+        # 準備圖片和檔案名稱資訊
+        content_parts = []
+        file_info_text = "以下是要分析的K線圖檔案：\n"
         
-        prompt = """
-        請分析這張K線圖並提供以下資訊：
-        1. 目前的趨勢方向（上漲、下跌、橫盤）
-        2. 技術型態分析（如：三角形、旗形、頭肩型等）
-        3. 支撐與壓力位分析
-        4. 交易量分析（如果圖中有顯示）
-        5. 整體市場情緒判斷
-        6. 可能的交易建議或風險提醒
+        for info in image_files_info:
+            filename = info['filename']
+            filepath = info['filepath']
+            
+            # 從檔名提取股票代號
+            stock_symbol = filename.split('_')[0] if '_' in filename else filename.split('.')[0]
+            file_info_text += f"- {filename} (股票代號: {stock_symbol})\n"
+            
+            # 載入圖片
+            image = Image.open(filepath)
+            content_parts.append(image)
         
-        請用繁體中文回答，並保持專業且易懂的語調。
+        prompt = f"""
+        {file_info_text}
+        
+        請分析這些K線圖並用表格格式回答，表格包含以下欄位：
+        
+        | 股票代號 | 目前位置 | 估計股價 |
+        |---------|----------|----------|
+        | XXX     | 高點/低點/中間 | $XXX |
+        
+        要求：
+        1. 從檔案名稱中提取股票代號（底線前的部分）
+        2. 判斷目前是在相對高點、低點還是中間位置
+        3. 根據圖表估計當前大概的股價
+        4. 請只回傳表格，不要其他額外說明
+        5. 用繁體中文回答
         """
         
-        response = model.generate_content([prompt, image])
+        # 組合內容
+        content_for_analysis = [prompt] + content_parts
+        
+        response = model.generate_content(content_for_analysis)
         return response.text
         
     except Exception as e:
@@ -52,35 +74,54 @@ def analyze_kline_image(image_path):
 @app.route('/', methods=['GET', 'POST'])
 def index():
     analysis_result = None
-    uploaded_filename = None
+    uploaded_files = None
     
     if request.method == 'POST':
-        if 'file' not in request.files:
-            flash('請選擇一個檔案')
+        if 'files' not in request.files:
+            flash('請選擇檔案')
             return redirect(request.url)
         
-        file = request.files['file']
+        files = request.files.getlist('files')
         
-        if file.filename == '':
-            flash('請選擇一個檔案')
+        if not files or all(file.filename == '' for file in files):
+            flash('請選擇至少一個檔案')
             return redirect(request.url)
         
-        if file and allowed_file(file.filename):
-            filename = secure_filename(file.filename)
-            filepath = os.path.join(UPLOAD_FOLDER, filename)
-            file.save(filepath)
+        # 處理多個檔案
+        image_files_info = []
+        uploaded_filenames = []
+        
+        for file in files:
+            if file and allowed_file(file.filename):
+                filename = secure_filename(file.filename)
+                filepath = os.path.join(UPLOAD_FOLDER, filename)
+                file.save(filepath)
+                
+                image_files_info.append({
+                    'filename': filename,
+                    'filepath': filepath
+                })
+                uploaded_filenames.append(filename)
+            else:
+                flash(f'檔案 {file.filename} 格式不支援')
+        
+        if image_files_info:
+            # 分析所有圖片
+            analysis_result = analyze_multiple_kline_images(image_files_info)
+            uploaded_files = uploaded_filenames
             
-            analysis_result = analyze_kline_image(filepath)
-            uploaded_filename = filename
-            
-            os.remove(filepath)
-            
+            # 清理暫存檔案
+            for info in image_files_info:
+                try:
+                    os.remove(info['filepath'])
+                except:
+                    pass
         else:
             flash('請上傳有效的圖片檔案 (png, jpg, jpeg, gif, bmp, webp)')
     
     return render_template('index.html', 
                          analysis_result=analysis_result,
-                         uploaded_filename=uploaded_filename)
+                         uploaded_files=uploaded_files)
 
 @app.errorhandler(413)
 def too_large(e):

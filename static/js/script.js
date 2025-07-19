@@ -2,43 +2,54 @@
 
 document.addEventListener('DOMContentLoaded', function() {
     const form = document.querySelector('form');
-    const fileInput = document.getElementById('file');
+    const fileInput = document.getElementById('files');
     const submitButton = form.querySelector('button[type="submit"]');
     
     // File input validation
     fileInput.addEventListener('change', function() {
-        const file = this.files[0];
-        if (file) {
-            // Check file size (16MB limit)
+        const files = this.files;
+        let totalSize = 0;
+        let invalidFiles = [];
+        
+        for (let i = 0; i < files.length; i++) {
+            const file = files[i];
+            
+            // Check file size (16MB limit per file)
             const maxSize = 16 * 1024 * 1024; // 16MB in bytes
             if (file.size > maxSize) {
-                alert('檔案大小不能超過 16MB');
-                this.value = '';
-                return;
+                invalidFiles.push(`${file.name} (超過 16MB)`);
+                continue;
             }
             
             // Check file type
             const allowedTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/gif', 'image/bmp', 'image/webp'];
             if (!allowedTypes.includes(file.type)) {
-                alert('請選擇有效的圖片檔案');
-                this.value = '';
-                return;
+                invalidFiles.push(`${file.name} (格式不支援)`);
+                continue;
             }
             
-            // Preview file name
-            const fileName = file.name;
-            if (fileName.length > 30) {
-                this.setAttribute('title', fileName);
-            }
+            totalSize += file.size;
+        }
+        
+        if (invalidFiles.length > 0) {
+            alert('以下檔案有問題：\n' + invalidFiles.join('\n'));
+            this.value = '';
+            return;
+        }
+        
+        // Show selected files count
+        if (files.length > 0) {
+            const fileNames = Array.from(files).map(f => f.name).join(', ');
+            this.setAttribute('title', `已選擇 ${files.length} 個檔案：${fileNames}`);
         }
     });
     
     // Form submission with loading state
     form.addEventListener('submit', function(e) {
-        const file = fileInput.files[0];
-        if (!file) {
+        const files = fileInput.files;
+        if (!files || files.length === 0) {
             e.preventDefault();
-            alert('請選擇一個檔案');
+            alert('請選擇至少一個檔案');
             return;
         }
         
@@ -53,7 +64,7 @@ document.addEventListener('DOMContentLoaded', function() {
             <div class="spinner-border text-primary" role="status">
                 <span class="visually-hidden">Loading...</span>
             </div>
-            <p class="mt-3">正在分析您的K線圖，請稍候...</p>
+            <p class="mt-3">正在分析您的多張K線圖，請稍候...</p>
         `;
         
         form.parentNode.appendChild(loadingDiv);

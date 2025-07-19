@@ -12,7 +12,7 @@
         <div class="row justify-content-center">
             <div class="col-md-8">
                 <h1 class="text-center mb-4">AI K線圖分析工具</h1>
-                <p class="text-center text-muted mb-4">上傳您的K線圖，獲得AI智能分析結果</p>
+                <p class="text-center text-muted mb-4">上傳多張K線圖，獲得AI智能分析表格</p>
                 
                 <!-- Flash Messages -->
                 {% with messages = get_flashed_messages() %}
@@ -29,16 +29,17 @@
                 <!-- Upload Form -->
                 <div class="card mb-4">
                     <div class="card-header">
-                        <h5 class="card-title mb-0">上傳K線圖</h5>
+                        <h5 class="card-title mb-0">上傳多張K線圖</h5>
                     </div>
                     <div class="card-body">
                         <form method="POST" enctype="multipart/form-data">
                             <div class="mb-3">
-                                <label for="file" class="form-label">選擇圖片檔案</label>
-                                <input type="file" class="form-control" id="file" name="file" 
-                                       accept="image/*" required>
+                                <label for="files" class="form-label">選擇多張圖片檔案</label>
+                                <input type="file" class="form-control" id="files" name="files" 
+                                       accept="image/*" multiple required>
                                 <div class="form-text">
-                                    支援格式：PNG, JPG, JPEG, GIF, BMP, WebP (最大 16MB)
+                                    支援格式：PNG, JPG, JPEG, GIF, BMP, WebP (每檔最大 16MB)<br>
+                                    檔案名稱格式：DJT_1Day.png、NVDA_1Day.jpg 等
                                 </div>
                             </div>
                             <div class="d-grid">
@@ -57,8 +58,8 @@
                         <h5 class="card-title mb-0">
                             <i class="bi bi-graph-up"></i> AI 分析結果
                         </h5>
-                        {% if uploaded_filename %}
-                        <small>檔案：{{ uploaded_filename }}</small>
+                        {% if uploaded_files %}
+                        <small>已分析檔案：{{ uploaded_files | join(', ') }}</small>
                         {% endif %}
                     </div>
                     <div class="card-body">
@@ -77,10 +78,10 @@
                         </div>
                         <div class="card-body">
                             <ul class="list-unstyled">
-                                <li><i class="bi bi-check-circle text-success"></i> 上傳清晰的K線圖截圖</li>
+                                <li><i class="bi bi-check-circle text-success"></i> 上傳多張K線圖截圖（檔名格式：DJT_1Day.png）</li>
                                 <li><i class="bi bi-check-circle text-success"></i> 支援多種圖片格式</li>
-                                <li><i class="bi bi-check-circle text-success"></i> AI將分析趨勢、型態、支撐壓力等</li>
-                                <li><i class="bi bi-check-circle text-success"></i> 獲得專業的技術分析建議</li>
+                                <li><i class="bi bi-check-circle text-success"></i> AI將生成股票分析表格</li>
+                                <li><i class="bi bi-check-circle text-success"></i> 顯示股票代號、價位水平和當前股價</li>
                             </ul>
                         </div>
                     </div>
