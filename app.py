@@ -32,7 +32,7 @@ def allowed_file(filename):
 
 def analyze_multiple_kline_images(image_files_info):
     try:
-        model = genai.GenerativeModel('gemini-2.0-flash-exp')
+        model = genai.GenerativeModel('gemini-2.5-flash')
         
         # 準備圖片和檔案名稱資訊
         content_parts = []
@@ -53,17 +53,25 @@ def analyze_multiple_kline_images(image_files_info):
         prompt = f"""
         {file_info_text}
         
-        請分析這些K線圖並用表格格式回答，表格包含以下欄位：
+        請分析這些K線技術分析走勢圖並用表格格式回答，表格包含以下欄位：
         
-        | 股票代號 | 目前位置 | 估計股價 |
-        |---------|----------|----------|
-        | XXX     | 高點/低點/中間 | $XXX |
+        | 圖片檔案名 | 股票代號 | 時間區間 | 當前走勢 |
+        |-----------|----------|----------|----------|
+        | NVDA_3h.png | NVDA | 3h | 多 |
+        | NVDA_day.png | NVDA | 1d | 空 |
         
         要求：
-        1. 從檔案名稱中提取股票代號（底線前的部分）
-        2. 判斷目前是在相對高點、低點還是中間位置
-        3. 根據圖表估計當前大概的股價
-        4. 請只回傳表格，不要其他額外說明
+        1. 從檔案名稱格式 `股票代號_時間區間.png` 中提取資訊：
+           - 股票代號：底線前的部分（如：NVDA、TSM）
+           - 時間區間：底線後到 .png 前的部分，並轉換格式：
+             * `3h` = 3h（近三小時）
+             * `day` = 1d（近一天）  
+             * `week` = 1w（近一週）
+        2. 重點分析圖中**最右邊的價格走勢**，判斷趨勢：
+           - 「多」= bullish，上漲趨勢
+           - 「空」= bearish，下跌趨勢
+        3. 不需要輸出股價數字，也不需要判斷是否為高點/低點
+        4. 請只回傳完整表格，不要其他額外說明
         5. 用繁體中文回答
         """
         
